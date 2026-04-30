@@ -19,17 +19,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("clienteBean")
-@jakarta.faces.view.ViewScoped
+@ViewScoped
 @Getter
 @Setter
 public class ClienteBean implements Serializable {
 
     private List<Cliente> clientes;
     private List<Cliente> clientesFiltrados;
-    private Cliente clienteSeleccionado = new Cliente();
+    private Cliente clienteSeleccionado;
     private String filtro = "";
 
-    // Obtenemos el servicio de Spring manualmente, sin @Inject ni @Autowired
     private IClienteServicio getServicio() {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         ServletContext servletContext = (ServletContext) facesContext
@@ -41,6 +40,7 @@ public class ClienteBean implements Serializable {
 
     @PostConstruct
     public void init() {
+        clienteSeleccionado = new Cliente(); // 🔥 CLAVE
         cargarClientes();
     }
 
@@ -51,6 +51,7 @@ public class ClienteBean implements Serializable {
 
     public void filtrar() {
         if (clientes == null) return;
+
         if (filtro == null || filtro.isBlank()) {
             clientesFiltrados = clientes;
         } else {
@@ -68,29 +69,42 @@ public class ClienteBean implements Serializable {
     }
 
     public void guardarCliente() {
-        System.out.println("ENTRANDO A GUARDAR");
         boolean esNuevo = (clienteSeleccionado.getId() == null);
+
         getServicio().guardarCliente(clienteSeleccionado);
+
         String msg = esNuevo
                 ? "Cliente agregado correctamente"
                 : "Cliente actualizado correctamente";
+
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, msg, null));
+
         limpiarFormulario();
         cargarClientes();
     }
 
     public void eliminarCliente() {
         getServicio().eliminarCliente(clienteSeleccionado);
+
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_WARN, "Cliente eliminado", null));
+
         limpiarFormulario();
         cargarClientes();
     }
 
     public void limpiarFormulario() {
-        clienteSeleccionado = new Cliente();
+        clienteSeleccionado = new Cliente(); // 🔥 CLAVE
         filtro = "";
         clientesFiltrados = clientes;
+    }
+
+    // 🔥 BLINDAJE TOTAL (evita null SIEMPRE)
+    public Cliente getClienteSeleccionado() {
+        if (clienteSeleccionado == null) {
+            clienteSeleccionado = new Cliente();
+        }
+        return clienteSeleccionado;
     }
 }
