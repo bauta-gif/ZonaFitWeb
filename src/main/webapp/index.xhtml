@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Zona Fit</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+        .header { background: #1a1a2e; color: white; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+        .header h1 { margin: 0; font-size: 22px; }
+        .header p { margin: 0; font-size: 13px; color: #aaaacc; }
+        .contenedor { display: flex; gap: 16px; padding: 20px; }
+        .panel-tabla { flex: 2; background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .panel-form { flex: 1; background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .stats { display: flex; gap: 12px; margin-bottom: 16px; }
+        .stat { background: #f0f0f0; border-radius: 8px; padding: 12px 16px; flex: 1; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: bold; color: #1a1a2e; }
+        .stat-label { font-size: 12px; color: #666; }
+        h2 { font-size: 16px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 0; }
+        .campo { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+        .campo label { font-size: 12px; color: #555; }
+    </style>
+</h:head>
+
+<h:body>
+
+    <div class="header">
+        <div>
+            <h1>Zona Fit</h1>
+            <p>Sistema de gestión de clientes</p>
+        </div>
+    </div>
+
+    <h:form id="forma">
+        <div class="contenedor">
+
+            <!-- TABLA -->
+            <div class="panel-tabla">
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-val">
+                            <h:outputText value="#{clienteBean.clientes != null ? clienteBean.clientes.size() : 0}"/>
+                        </div>
+                        <div class="stat-label">Total clientes</div>
+                    </div>
+                </div>
+
+                <h2>Clientes registrados</h2>
+
+                <p:inputText value="#{clienteBean.filtro}"
+                             placeholder="Buscar por nombre o apellido..."
+                             style="width:100%; margin-bottom:12px">
+                    <p:ajax event="keyup" update="forma" listener="#{clienteBean.filtrar}"/>
+                </p:inputText>
+
+                <p:dataTable id="tablaClientes"
+                             value="#{clienteBean.clientesFiltrados}"
+                             var="cliente"
+                             selectionMode="single"
+                             selection="#{clienteBean.clienteSeleccionado}"
+                             rowKey="#{cliente.id}"
+                             paginator="true"
+                             rows="8"
+                             style="width:100%">
+
+                    <p:ajax event="rowSelect"
+                            listener="#{clienteBean.onRowSelect}"
+                            update="forma"/>
+
+                    <p:column headerText="Id" style="width:60px">
+                        <h:outputText value="#{cliente.id}"/>
+                    </p:column>
+                    <p:column headerText="Nombre">
+                        <h:outputText value="#{cliente.nombre}"/>
+                    </p:column>
+                    <p:column headerText="Apellido">
+                        <h:outputText value="#{cliente.apellido}"/>
+                    </p:column>
+                    <p:column headerText="Membresía (días)" style="width:130px">
+                        <h:outputText value="#{cliente.membresia}"/>
+                    </p:column>
+
+                </p:dataTable>
+            </div>
+
+            <!-- FORMULARIO -->
+            <h:panelGroup layout="block" id="panelForm" styleClass="panel-form">
+
+                <h2>
+                    <h:outputText value="Editar cliente"
+                                  rendered="#{clienteBean.clienteSeleccionado.id != null}"/>
+                    <h:outputText value="Nuevo cliente"
+                                  rendered="#{clienteBean.clienteSeleccionado.id == null}"/>
+                </h2>
+
+                <p:messages id="msgs" autoUpdate="true" showDetail="true"
+                            style="margin-bottom:12px"/>
+
+                <div class="campo">
+                    <label>Id</label>
+                    <p:inputText value="#{clienteBean.clienteSeleccionado.id}"
+                                 disabled="true"
+                                 placeholder="Generado automáticamente"
+                                 style="width:100%"/>
+                </div>
+
+                <div class="campo">
+                    <label>Nombre *</label>
+                    <p:inputText id="nombre"
+                                 value="#{clienteBean.clienteSeleccionado.nombre}"
+                                 required="true"
+                                 requiredMessage="El nombre es obligatorio"
+                                 style="width:100%"/>
+                </div>
+
+                <div class="campo">
+                    <label>Apellido</label>
+                    <p:inputText id="apellido"
+                                 value="#{clienteBean.clienteSeleccionado.apellido}"
+                                 style="width:100%"/>
+                </div>
+
+                <div class="campo">
+                    <label>Membresía (días) *</label>
+                    <p:inputNumber id="membresia"
+                                   value="#{clienteBean.clienteSeleccionado.membresia}"
+                                   required="true"
+                                   requiredMessage="La membresía es obligatoria"
+                                   minValue="1"
+                                   style="width:100%"/>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px">
+
+                    <!-- BOTONES -->
+
+                    <p:commandButton value="Guardar"
+                                     icon="pi pi-save"
+                                     action="#{clienteBean.guardarCliente}"
+                                     process="@form"
+                                     update="@form"
+                                     style="width:100%"
+                                     styleClass="ui-button-success"/>
+
+                    <p:commandButton value="Eliminar"
+                                     icon="pi pi-trash"
+                                     action="#{clienteBean.eliminarCliente}"
+                                     process="@this"
+                                     update="@form"
+                                     style="width:100%"
+                                     styleClass="ui-button-danger"
+                                     disabled="#{clienteBean.clienteSeleccionado.id == null}">
+                        <p:confirm header="Confirmar" message="¿Eliminar este cliente?"/>
+                    </p:commandButton>
+
+                    <p:commandButton value="Limpiar"
+                                     icon="pi pi-refresh"
+                                     action="#{clienteBean.limpiarFormulario}"
+                                     process="@this"
+                                     update="@form"
+                                     immediate="true"
+                                     style="width:100%"
+                                     styleClass="ui-button-secondary"/>
+                </div>
+
+            </h:panelGroup>
+        </div>
+    </h:form>
+
+    <p:confirmDialog global="true" showEffect="fade">
+        <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+    </p:confirmDialog>
+
+</h:body>
+</html>
