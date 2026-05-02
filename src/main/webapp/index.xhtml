@@ -83,6 +83,18 @@
                     <p:column headerText="Membresía (días)" style="width:130px">
                         <h:outputText value="#{cliente.membresia}"/>
                     </p:column>
+                    <p:column headerText="Vence">
+                        <h:outputText value="#{cliente.fechaVencimiento != null
+                            ? cliente.fechaVencimiento : 'Sin pagos'}"/>
+                    </p:column>
+                    <p:column headerText="Estado">
+                        <h:outputText value="#{clienteBean.getEstadoMembresia(cliente)}"
+                                      style="#{clienteBean.getEstadoMembresia(cliente) == 'VENCIDA'
+                      ? 'color:red; font-weight:bold'
+                      : clienteBean.getEstadoMembresia(cliente) == 'POR VENCER'
+                      ? 'color:orange; font-weight:bold'
+                      : 'color:green'}"/>
+                    </p:column>
 
                 </p:dataTable>
             </div>
@@ -166,10 +178,68 @@
                                      style="width:100%"
                                      styleClass="ui-button-secondary"/>
                 </div>
+                <!-- SECCIÓN PAGOS - solo visible si hay cliente seleccionado -->
+                <h:panelGroup rendered="#{clienteBean.clienteSeleccionado.id != null}">
+
+                    <h2 style="margin-top:20px">Registrar pago</h2>
+
+                    <div class="campo">
+                        <label>Monto ($)</label>
+                        <p:inputNumber value="#{clienteBean.nuevoPago.monto}"
+                                       style="width:100%" minValue="0"/>
+                    </div>
+
+                    <div class="campo">
+                        <label>Método de pago</label>
+                        <p:selectOneMenu value="#{clienteBean.nuevoPago.metodoPago}"
+                                         style="width:100%">
+                            <f:selectItem itemLabel="Seleccionar..." itemValue=""/>
+                            <f:selectItems value="#{clienteBean.metodosPago}"/>
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="campo">
+                        <label>Observaciones</label>
+                        <p:inputText value="#{clienteBean.nuevoPago.observaciones}"
+                                     style="width:100%"/>
+                    </div>
+
+                    <p:commandButton value="Registrar pago"
+                                     icon="pi pi-dollar"
+                                     action="#{clienteBean.registrarPago}"
+                                     update="forma"
+                                     style="width:100%; margin-bottom:8px"
+                                     styleClass="ui-button-warning"/>
+
+                    <h2 style="margin-top:16px">Historial de pagos</h2>
+
+                    <p:dataTable value="#{clienteBean.pagosPorCliente}"
+                                 var="pago"
+                                 emptyMessage="Sin pagos registrados"
+                                 style="width:100%; font-size:12px">
+                        <p:column headerText="Fecha">
+                            <h:outputText value="#{pago.fecha}"/>
+                        </p:column>
+                        <p:column headerText="Monto">
+                            <h:outputText value="$#{pago.monto}"/>
+                        </p:column>
+                        <p:column headerText="Método">
+                            <h:outputText value="#{pago.metodoPago}"/>
+                        </p:column>
+                    </p:dataTable>
+
+                </h:panelGroup>
 
             </h:panelGroup>
         </div>
     </h:form>
+    <div style="padding: 0 20px 20px;">
+        <p:commandButton value="Exportar reporte Excel"
+                         icon="pi pi-file-excel"
+                         action="#{clienteBean.exportarExcel}"
+                         ajax="false"
+                         styleClass="ui-button-success"/>
+    </div>
 
     <p:confirmDialog global="true" showEffect="fade">
         <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
